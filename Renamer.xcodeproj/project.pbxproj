@@ -11,7 +11,6 @@
 		4D189B552B4E86A40083FD9E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D189B542B4E86A40083FD9E /* ContentView.swift */; };
 		4D189B572B4E86A50083FD9E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D189B562B4E86A50083FD9E /* Assets.xcassets */; };
 		4D189B5A2B4E86A50083FD9E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D189B592B4E86A50083FD9E /* Preview Assets.xcassets */; };
-		4D189B622B4E8CD30083FD9E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D189B612B4E8CD30083FD9E /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,7 +20,6 @@
 		4D189B562B4E86A50083FD9E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4D189B592B4E86A50083FD9E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		4D189B5B2B4E86A50083FD9E /* Renamer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Renamer.entitlements; sourceTree = "<group>"; };
-		4D189B612B4E8CD30083FD9E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,7 +53,6 @@
 			isa = PBXGroup;
 			children = (
 				4D189B522B4E86A40083FD9E /* RenamerApp.swift */,
-				4D189B612B4E8CD30083FD9E /* AppDelegate.swift */,
 				4D189B542B4E86A40083FD9E /* ContentView.swift */,
 				4D189B562B4E86A50083FD9E /* Assets.xcassets */,
 				4D189B5B2B4E86A50083FD9E /* Renamer.entitlements */,
@@ -142,7 +139,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D189B622B4E8CD30083FD9E /* AppDelegate.swift in Sources */,
 				4D189B552B4E86A40083FD9E /* ContentView.swift in Sources */,
 				4D189B532B4E86A40083FD9E /* RenamerApp.swift in Sources */,
 			);

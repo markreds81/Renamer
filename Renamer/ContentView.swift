@@ -9,11 +9,8 @@ import SwiftUI
 import PDFKit
 
 struct ContentView: View {
-	@StateObject
+    @StateObject
 	private var world = World()
-	
-	//@State
-	//private var documentUrl: URL!
 	
 	@AppStorage("leadingText")
 	private var leadingText = String()
@@ -63,152 +60,154 @@ struct ContentView: View {
 	}
 	
     var body: some View {
-		VStack {
-			
-			/// File drop and preview area
-			VStack {
-				if let documentUrl = world.documentUrl {
-					if documentUrl.pathExtension.caseInsensitiveCompare("pdf") == .orderedSame {
-						PDFKitView(url: documentUrl)
-						Text(documentUrl.lastPathComponent)
-							.font(.caption)
-					} else {
-						Image(nsImage: NSWorkspace.shared.icon(forFile: documentUrl.path(percentEncoded: false)))
-							.resizable()
-							.scaledToFit()
-							.frame(width: 64.0, height: 64.0)
-						Text(documentUrl.lastPathComponent)
-					}
-				} else {
-					Image(systemName: "doc.fill")
-						.resizable()
-						.scaledToFit()
-						.frame(width: 48.0, height: 48.0)
-						.foregroundStyle(.tint)
-					Text("Drag a file here")
-				}
-			}
-			.onDrop(of: [.fileURL], isTargeted: nil) { providers -> Bool in
-				if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) }) {
-					let _ = provider.loadObject(ofClass: URL.self) { object, error in
-						if let url = object {
-							print("url: \(url)")
-							self.world.documentUrl = url
-							updateFilename()
-						}
-					}
-					return true
-				}
-				return false
-			}
-			
-			/// Rename options
-			GroupBox(label: Text("Rename options")) {
-				VStack(alignment: .leading) {
-					HStack {
-						Text("Leading text:")
-						TextField("Leading text", text: $leadingText)
-							.disableAutocorrection(true)
-							.onChange(of: leadingText) {
-								updateFilename()
-							}
-					}
-					
-					HStack {
-						Toggle(isOn: $shouldAppendDate) {
-							Text("Append date:")
-						}
-						.toggleStyle(.checkbox)
-						.onChange(of: shouldAppendDate) {
-							updateFilename()
-						}
-						
-						DatePicker("", selection: $nameDate, displayedComponents: [.date])
-							.onChange(of: nameDate) {
-								updateFilename()
-							}
-						
-						Picker("Format:", selection: $dateFormat) {
-							ForEach(DateFormat.allCases) { item in
-								Text(item.rawValue).tag(item)
-							}
-						}
-						.onChange(of: dateFormat) {
-							updateFilename()
-						}
-					}
-					
-					HStack {
-						Toggle(isOn: $shouldAppendCounter) {
-							Text("Append counter:")
-						}
-						.toggleStyle(.checkbox)
-						.onChange(of: shouldAppendCounter) {
-							updateFilename()
-						}
-						Stepper(value: $nameCounter) {
-							TextField("Start from", value: $nameCounter, formatter: NumberFormatter())
-								.onChange(of: nameCounter) {
-									updateFilename()
-								}
-						}
-						Text("Leading zeros:")
-						Stepper(value: $leadingZeros) {
-							TextField("Count", value: $leadingZeros, formatter: NumberFormatter())
-								.onChange(of: leadingZeros) {
-									updateFilename()
-								}
-						}
-						
-					}
-					
-					HStack {
-						Text("Trailing text:")
-						TextField("Trailing text", text: $trailingText)
-							.disableAutocorrection(true)
-							.onChange(of: trailingText) {
-								updateFilename()
-							}
-					}
-					
-					HStack {
-						Text("Fields divider:")
-						TextField("Fields divider text", text: $fieldsDivider)
-							.disableAutocorrection(true)
-							.onChange(of: fieldsDivider) {
-								updateFilename()
-							}
-					}
-				}
-			}
-			
-			/// New file name
-			VStack {
-				Image(systemName: "arrow.down")
-					.imageScale(.large)
-				if world.documentUrl != nil {
-					Text("No document selected")
-						.font(.caption)
-				} else {
-					Text(filename)
-				}
-			}
-			
-			Spacer()
-			
-			HStack {
-				Spacer()
-				Button("Rename", action: rename)
-					.disabled(world.documentUrl == nil)
-					.alert(isPresented: $errorOccurred) {
-						Alert(title: Text("Rename Error"), message: Text(errorMessage), dismissButton: .default(Text("Ok")))
-					}
-			}
-		}
+        VStack {
+            /// File drop and preview area
+            VStack {
+                if let documentUrl = world.documentUrl {
+                    if documentUrl.pathExtension.caseInsensitiveCompare("pdf") == .orderedSame {
+                        PDFKitView(url: documentUrl)
+                        Text(documentUrl.lastPathComponent)
+                            .font(.caption)
+                    } else {
+                        Image(nsImage: NSWorkspace.shared.icon(forFile: documentUrl.path(percentEncoded: false)))
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 64.0, height: 64.0)
+                        Text(documentUrl.lastPathComponent)
+                    }
+                } else {
+                    Image(systemName: "doc.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 48.0, height: 48.0)
+                        .foregroundStyle(.tint)
+                    Text("Drag a file here")
+                }
+            }
+            .onDrop(of: [.fileURL], isTargeted: nil) { providers -> Bool in
+                if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) }) {
+                    let _ = provider.loadObject(ofClass: URL.self) { object, error in
+                        if let url = object {
+                            DispatchQueue.main.async {
+                                self.world.documentUrl = url
+                            }
+                        }
+                    }
+                    return true
+                }
+                return false
+            }
+            
+            /// Rename options
+            GroupBox(label: Text("Rename options")) {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text("Leading text:")
+                        TextField("Leading text", text: $leadingText)
+                            .disableAutocorrection(true)
+                            .onChange(of: leadingText) {
+                                updateFilename()
+                            }
+                    }
+                    
+                    HStack {
+                        Toggle(isOn: $shouldAppendDate) {
+                            Text("Append date:")
+                        }
+                        .toggleStyle(.checkbox)
+                        .onChange(of: shouldAppendDate) {
+                            updateFilename()
+                        }
+                        
+                        DatePicker("", selection: $nameDate, displayedComponents: [.date])
+                            .onChange(of: nameDate) {
+                                updateFilename()
+                            }
+                        
+                        Picker("Format:", selection: $dateFormat) {
+                            ForEach(DateFormat.allCases) { item in
+                                Text(item.rawValue).tag(item)
+                            }
+                        }
+                        .onChange(of: dateFormat) {
+                            updateFilename()
+                        }
+                    }
+                    
+                    HStack {
+                        Toggle(isOn: $shouldAppendCounter) {
+                            Text("Append counter:")
+                        }
+                        .toggleStyle(.checkbox)
+                        .onChange(of: shouldAppendCounter) {
+                            updateFilename()
+                        }
+                        Stepper(value: $nameCounter) {
+                            TextField("Start from", value: $nameCounter, formatter: NumberFormatter())
+                                .onChange(of: nameCounter) {
+                                    updateFilename()
+                                }
+                        }
+                        Text("Leading zeros:")
+                        Stepper(value: $leadingZeros) {
+                            TextField("Count", value: $leadingZeros, formatter: NumberFormatter())
+                                .onChange(of: leadingZeros) {
+                                    updateFilename()
+                                }
+                        }
+                        
+                    }
+                    
+                    HStack {
+                        Text("Trailing text:")
+                        TextField("Trailing text", text: $trailingText)
+                            .disableAutocorrection(true)
+                            .onChange(of: trailingText) {
+                                updateFilename()
+                            }
+                    }
+                    
+                    HStack {
+                        Text("Fields divider:")
+                        TextField("Fields divider text", text: $fieldsDivider)
+                            .disableAutocorrection(true)
+                            .onChange(of: fieldsDivider) {
+                                updateFilename()
+                            }
+                    }
+                }
+            }
+            
+            /// New file name
+            VStack {
+                Image(systemName: "arrow.down")
+                    .imageScale(.large)
+                if world.documentUrl == nil {
+                    Text("No document selected")
+                        .font(.caption)
+                } else {
+                    Text(filename)
+                }
+            }
+            
+            Spacer()
+            
+            HStack {
+                Spacer()
+                Button("Rename", action: rename)
+                    .disabled(world.documentUrl == nil)
+                    .alert(isPresented: $errorOccurred) {
+                        Alert(title: Text("Rename Error"), message: Text(errorMessage), dismissButton: .default(Text("Ok")))
+                    }
+            }
+        }
         .padding()
-		.focusable()
-		.focusEffectDisabled()
-		.focusedValue(\.world, world)
+        .focusable()
+        .focusEffectDisabled()
+        .focusedValue(\.world, world)
+        .onChange(of: world.documentUrl) {
+            updateFilename()
+        }        
     }
 	
 	func updateFilename() {

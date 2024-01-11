@@ -9,10 +9,9 @@ import SwiftUI
 
 @main
 struct RenamerApp: App {
-	
 	@NSApplicationDelegateAdaptor(AppDelegate.self)
 	var appDelegate
-	
+    
 	@FocusedValue(\.world)
 	var world: World?
 	
@@ -20,15 +19,15 @@ struct RenamerApp: App {
         WindowGroup {
             ContentView()
         }
-		.commands {
-			CommandGroup(after: .newItem) {
-				Button("Select document...") {
-					world?.reply = "Hey...!"
-					world?.documentUrl = showOpenPanel()
-				}
-				.keyboardShortcut("o")
-			}
-		}
+        .commands {
+            CommandGroup(after: .newItem) {
+                Button("Select document...") {
+                    world?.reply = "Hey...!"
+                    world?.documentUrl = showOpenPanel()
+                }
+                .keyboardShortcut("o")
+            }
+        }
     }
 	
 	func showOpenPanel() -> URL? {
@@ -38,7 +37,14 @@ struct RenamerApp: App {
 	}
 }
 
-public class World: ObservableObject {
+class AppDelegate: NSObject, NSApplicationDelegate {
+    
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
+    }
+}
+
+class World: ObservableObject {
 	@Published
 	var reply: String?
 	
@@ -46,11 +52,11 @@ public class World: ObservableObject {
 	var documentUrl: URL?
 }
 
-public struct WorldFocusedValueKey: FocusedValueKey {
+struct WorldFocusedValueKey: FocusedValueKey {
 	public typealias Value = World
 }
 
-public extension FocusedValues {
+extension FocusedValues {
 	
 	typealias World = WorldFocusedValueKey
 	
