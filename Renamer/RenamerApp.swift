@@ -12,18 +12,16 @@ struct RenamerApp: App {
 	@NSApplicationDelegateAdaptor(AppDelegate.self)
 	var appDelegate
     
-	@FocusedValue(\.world)
-	var world: World?
+	let appState = AppState()
 	
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        Window("Renamer", id: "main") {
+            ContentView().environmentObject(appState)
         }
         .commands {
             CommandGroup(after: .newItem) {
                 Button("Select document...") {
-                    world?.reply = "Hey...!"
-                    world?.documentUrl = showOpenPanel()
+                    appState.documentUrl = showOpenPanel()
                 }
                 .keyboardShortcut("o")
             }
@@ -37,31 +35,13 @@ struct RenamerApp: App {
 	}
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
-    
+class AppDelegate: NSObject, NSApplicationDelegate {    
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
     }
 }
 
-class World: ObservableObject {
-	@Published
-	var reply: String?
-	
+class AppState: ObservableObject {
 	@Published
 	var documentUrl: URL?
-}
-
-struct WorldFocusedValueKey: FocusedValueKey {
-	public typealias Value = World
-}
-
-extension FocusedValues {
-	
-	typealias World = WorldFocusedValueKey
-	
-	var world: World.Value? {
-		get { self[World.self] }
-		set { self[World.self] = newValue }
-	}
 }

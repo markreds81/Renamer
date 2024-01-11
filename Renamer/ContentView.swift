@@ -9,8 +9,8 @@ import SwiftUI
 import PDFKit
 
 struct ContentView: View {
-    @StateObject
-	private var world = World()
+    @EnvironmentObject
+    private var appState: AppState
 	
 	@AppStorage("leadingText")
 	private var leadingText = String()
@@ -48,9 +48,6 @@ struct ContentView: View {
 	@State
 	private var errorMessage = String()
 	
-	@State
-	private var filename = String()
-	
 	enum DateFormat: String, CaseIterable, Identifiable {
 		case YYYYMMDD
 		case YYYYMM
@@ -63,7 +60,7 @@ struct ContentView: View {
         VStack {
             /// File drop and preview area
             VStack {
-                if let documentUrl = world.documentUrl {
+                if let documentUrl = appState.documentUrl {
                     if documentUrl.pathExtension.caseInsensitiveCompare("pdf") == .orderedSame {
                         PDFKitView(url: documentUrl)
                         Text(documentUrl.lastPathComponent)
@@ -89,7 +86,7 @@ struct ContentView: View {
                     let _ = provider.loadObject(ofClass: URL.self) { object, error in
                         if let url = object {
                             DispatchQueue.main.async {
-                                self.world.documentUrl = url
+                                appState.documentUrl = url
                             }
                         }
                     }
@@ -99,15 +96,12 @@ struct ContentView: View {
             }
             
             /// Rename options
-            GroupBox(label: Text("Rename options")) {
+            GroupBox(label: Text("Rules")) {
                 VStack(alignment: .leading) {
                     HStack {
                         Text("Leading text:")
                         TextField("Leading text", text: $leadingText)
                             .disableAutocorrection(true)
-                            .onChange(of: leadingText) {
-                                updateFilename()
-                            }
                     }
                     
                     HStack {
@@ -115,22 +109,13 @@ struct ContentView: View {
                             Text("Append date:")
                         }
                         .toggleStyle(.checkbox)
-                        .onChange(of: shouldAppendDate) {
-                            updateFilename()
-                        }
                         
                         DatePicker("", selection: $nameDate, displayedComponents: [.date])
-                            .onChange(of: nameDate) {
-                                updateFilename()
-                            }
                         
                         Picker("Format:", selection: $dateFormat) {
                             ForEach(DateFormat.allCases) { item in
                                 Text(item.rawValue).tag(item)
                             }
-                        }
-                        .onChange(of: dateFormat) {
-                            updateFilename()
                         }
                     }
                     
@@ -139,21 +124,13 @@ struct ContentView: View {
                             Text("Append counter:")
                         }
                         .toggleStyle(.checkbox)
-                        .onChange(of: shouldAppendCounter) {
-                            updateFilename()
-                        }
+                        
                         Stepper(value: $nameCounter) {
                             TextField("Start from", value: $nameCounter, formatter: NumberFormatter())
-                                .onChange(of: nameCounter) {
-                                    updateFilename()
-                                }
                         }
                         Text("Leading zeros:")
                         Stepper(value: $leadingZeros) {
                             TextField("Count", value: $leadingZeros, formatter: NumberFormatter())
-                                .onChange(of: leadingZeros) {
-                                    updateFilename()
-                                }
                         }
                         
                     }
@@ -162,18 +139,12 @@ struct ContentView: View {
                         Text("Trailing text:")
                         TextField("Trailing text", text: $trailingText)
                             .disableAutocorrection(true)
-                            .onChange(of: trailingText) {
-                                updateFilename()
-                            }
                     }
                     
                     HStack {
                         Text("Fields divider:")
                         TextField("Fields divider text", text: $fieldsDivider)
                             .disableAutocorrection(true)
-                            .onChange(of: fieldsDivider) {
-                                updateFilename()
-                            }
                     }
                 }
             }
@@ -182,11 +153,17 @@ struct ContentView: View {
             VStack {
                 Image(systemName: "arrow.down")
                     .imageScale(.large)
-                if world.documentUrl == nil {
+                if appState.documentUrl == nil {
                     Text("No document selected")
                         .font(.caption)
                 } else {
-                    Text(filename)
+                    let filename = filename()
+                    if filename.isEmpty {
+                        Text("No filename rules")
+                            .font(.caption)
+                    } else {
+                        Text(filename)
+                    }
                 }
             }
             
@@ -195,65 +172,70 @@ struct ContentView: View {
             HStack {
                 Spacer()
                 Button("Rename", action: rename)
-                    .disabled(world.documentUrl == nil)
+                    .disabled(appState.documentUrl == nil)
                     .alert(isPresented: $errorOccurred) {
                         Alert(title: Text("Rename Error"), message: Text(errorMessage), dismissButton: .default(Text("Ok")))
                     }
             }
         }
         .padding()
-        .focusable()
-        .focusEffectDisabled()
-        .focusedValue(\.world, world)
-        .onChange(of: world.documentUrl) {
-            updateFilename()
-        }        
     }
 	
-	func updateFilename() {
-		if let documentUrl = world.documentUrl {
-			var filename = String()
-			
+    func filename() -> String {
+        var result = String()
+		
+        if let documentUrl = appState.documentUrl {
 			if !leadingText.isEmpty {
-				filename.append(leadingText)
-				filename.append(fieldsDivider)
+                result.append(leadingText)
 			}
 			
 			if shouldAppendDate {
 				let dateFormatter = DateFormatter()
 				dateFormatter.dateFormat = dateFormat.rawValue
-				filename.append(dateFormatter.string(from: nameDate))
-				filename.append(fieldsDivider)
+                if !result.isEmpty {
+                    result.append(fieldsDivider)
+                }
+                result.append(dateFormatter.string(from: nameDate))
 			}
 			
 			if shouldAppendCounter {
 				let formatter = NumberFormatter()
 				formatter.minimumIntegerDigits = leadingZeros
-				filename.append(formatter.string(for: nameCounter) ?? String(nameCounter))
-				filename.append(fieldsDivider)
+                if !result.isEmpty {
+                    result.append(fieldsDivider)
+                }
+                result.append(formatter.string(for: nameCounter) ?? String(nameCounter))
 			}
 			
-			filename.append(trailingText)
+            if !trailingText.isEmpty {
+                if !result.isEmpty {
+                    result.append(fieldsDivider)
+                }
+                result.append(trailingText)
+            }
 			
-			let ext = documentUrl.pathExtension
-			if !ext.isEmpty {
-				filename.append(".")
-				filename.append(ext)
-			}
-			
-			self.filename = filename
+            if !result.isEmpty {
+                let ext = documentUrl.pathExtension
+                if !ext.isEmpty {
+                    result.append(".")
+                    result.append(ext)
+                }
+            }
 		}
+        
+        return result
 	}
 	
 	func rename() {
-		if let documentUrl = world.documentUrl {
+		if let documentUrl = appState.documentUrl {
+            let filename = filename()
 			if !filename.isEmpty {
 				var destinationUrl = documentUrl
 				destinationUrl.deleteLastPathComponent()
 				destinationUrl.appendPathComponent(filename)
 				do {
 					try FileManager.default.moveItem(at: documentUrl, to: destinationUrl)
-					world.documentUrl = destinationUrl
+                    appState.documentUrl = destinationUrl
 					if shouldAppendCounter {
 						nameCounter += 1
 					}
@@ -286,5 +268,5 @@ struct PDFKitView: NSViewRepresentable {
 }
 
 #Preview {
-    ContentView()
+    ContentView().environmentObject(AppState())
 }
