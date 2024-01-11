@@ -31,7 +31,7 @@ struct ContentView: View {
 	private var fieldsDivider = String()
 	
 	@State
-	private var dateFormat = DateFormat.YYYYMMDD
+	private var dateFormat = DateFormat.yyyyMMdd
 	
 	@AppStorage("shouldAppendDate")
 	private var shouldAppendDate = false
@@ -49,9 +49,9 @@ struct ContentView: View {
 	private var errorMessage = String()
 	
 	enum DateFormat: String, CaseIterable, Identifiable {
-		case YYYYMMDD
-		case YYYYMM
-		case YYYY
+		case yyyyMMdd
+		case yyyyMM
+		case yyyy
 		
 		var id: String { self.rawValue }
 	}
