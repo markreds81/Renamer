@@ -179,6 +179,9 @@ struct ContentView: View {
             }
         }
         .padding()
+		.onReceive(NotificationCenter.default.publisher(for: .performRenameNotification)) { object in
+			rename()
+		}
     }
 	
     func filename() -> String {

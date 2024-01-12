@@ -24,6 +24,11 @@ struct RenamerApp: App {
                     appState.documentUrl = showOpenPanel()
                 }
                 .keyboardShortcut("o")
+				
+				Button("Rename") {
+					NotificationCenter.default.post(name: .performRenameNotification, object: nil)
+				}
+				.keyboardShortcut("r")
             }
         }
     }
@@ -44,4 +49,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 class AppState: ObservableObject {
 	@Published
 	var documentUrl: URL?
+}
+
+extension Notification.Name {
+	static let performRenameNotification = Notification.Name("PerformRenameNotification")
 }
