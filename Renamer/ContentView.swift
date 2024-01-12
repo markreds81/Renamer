@@ -21,6 +21,12 @@ struct ContentView: View {
 	@State
 	private var nameDate = Date()
 	
+	@State
+	private var namePeriod = Period.firstQuarter
+	
+	@State
+	private var periodYear = Int(2024)
+	
 	@AppStorage("nameCounter")
 	private var nameCounter = Int(1)
 	
@@ -35,6 +41,9 @@ struct ContentView: View {
 	
 	@AppStorage("shouldAppendDate")
 	private var shouldAppendDate = false
+	
+	@AppStorage("shouldAppendPeriod")
+	private var shouldAppendPeriod = false
 	
 	@AppStorage("shouldAppendCounter")
 	private var shouldAppendCounter = false
@@ -52,6 +61,15 @@ struct ContentView: View {
 		case yyyyMMdd
 		case yyyyMM
 		case yyyy
+		
+		var id: String { self.rawValue }
+	}
+	
+	enum Period: String, CaseIterable, Identifiable {
+		case firstQuarter
+		case secondQuarter
+		case thirdQuarter
+		case fourthQuarter
 		
 		var id: String { self.rawValue }
 	}
@@ -118,6 +136,24 @@ struct ContentView: View {
                             }
                         }
                     }
+					
+					HStack {
+						Toggle(isOn: $shouldAppendPeriod) {
+							Text("Append date as:")
+						}
+						.toggleStyle(.checkbox)
+						
+						Stepper(value: $periodYear) {
+							TextField("Year", value: $periodYear, formatter: NumberFormatter())
+						}
+						
+						Picker("Period:", selection: $namePeriod) {
+							Text("1st Quarter").tag(Period.firstQuarter)
+							Text("2nd Quarter").tag(Period.secondQuarter)
+							Text("3rd Quarter").tag(Period.thirdQuarter)
+							Text("4th Quarter").tag(Period.fourthQuarter)
+						}
+					}
                     
                     HStack {
                         Toggle(isOn: $shouldAppendCounter) {
@@ -199,6 +235,34 @@ struct ContentView: View {
                     result.append(fieldsDivider)
                 }
                 result.append(dateFormatter.string(from: nameDate))
+			}
+			
+			if shouldAppendPeriod {
+				let dateFormatter = DateFormatter()
+				dateFormatter.dateFormat = DateFormat.yyyyMMdd.rawValue
+				var components = DateComponents()
+				components.year = periodYear
+				switch namePeriod {
+				case .firstQuarter:
+					components.month = 3
+					components.day = 31
+				case .secondQuarter:
+					components.month = 6
+					components.day = 30
+				case .thirdQuarter:
+					components.month = 9
+					components.day = 30
+				case .fourthQuarter:
+					components.month = 12
+					components.day = 31
+				}
+				let calendar = Calendar.current
+				if let date = calendar.date(from: components) {
+					if !result.isEmpty {
+						result.append(fieldsDivider)
+					}
+					result.append(dateFormatter.string(from: date))
+				}
 			}
 			
 			if shouldAppendCounter {
