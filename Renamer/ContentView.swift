@@ -51,6 +51,9 @@ struct ContentView: View {
 	@AppStorage("shouldPutDivider")
 	private var shouldPutDivider = false
 	
+	@AppStorage("shouldAppendCreationDate")
+	private var shouldAppendCreationDate = false
+	
 	@State
 	private var errorOccurred = false
 	
@@ -82,20 +85,25 @@ struct ContentView: View {
                     if documentUrl.pathExtension.caseInsensitiveCompare("pdf") == .orderedSame {
                         PDFKitView(url: documentUrl)
                         Text(documentUrl.lastPathComponent)
-                            .font(.caption)
+							.font(.headline)
                     } else {
                         Image(nsImage: NSWorkspace.shared.icon(forFile: documentUrl.path(percentEncoded: false)))
                             .resizable()
                             .scaledToFit()
                             .frame(width: 64.0, height: 64.0)
                         Text(documentUrl.lastPathComponent)
-                    }
+							.font(.headline)
+					}
+					if let creationDate = documentUrl.creationDate {
+						Text("Created on " + creationDate.formatted(date: .abbreviated, time: .omitted))
+							.font(.subheadline)
+					}
                 } else {
-                    Image(systemName: "doc.fill")
+                    //Image(systemName: "doc.fill")
+					Image(nsImage: NSImage(named: "HomeIcon")!)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 48.0, height: 48.0)
-                        .foregroundStyle(.tint)
+                        .frame(width: 64.0, height: 64.0)
                     Text("Drag a file here")
                 }
             }
@@ -127,6 +135,11 @@ struct ContentView: View {
                             Text("Append date:")
                         }
                         .toggleStyle(.checkbox)
+						
+						Toggle(isOn: $shouldAppendCreationDate) {
+							Text("Creation date")
+						}
+						.toggleStyle(.checkbox)
                         
                         DatePicker("", selection: $nameDate, displayedComponents: [.date])
                         
@@ -234,7 +247,11 @@ struct ContentView: View {
                 if !result.isEmpty {
                     result.append(fieldsDivider)
                 }
-                result.append(dateFormatter.string(from: nameDate))
+				if shouldAppendCreationDate, let creationDate = documentUrl.creationDate {
+					result.append(dateFormatter.string(from: creationDate))
+				} else {
+					result.append(dateFormatter.string(from: nameDate))
+				}
 			}
 			
 			if shouldAppendPeriod {
